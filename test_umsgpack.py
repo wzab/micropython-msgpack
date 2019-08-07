@@ -9,11 +9,10 @@
 #
 
 import sys
-import struct
+import ustruct as struct
 import unittest
-import datetime
-import io
-from collections import OrderedDict, namedtuple
+import uio as io
+from ucollections import OrderedDict, namedtuple
 
 import umsgpack
 
@@ -117,27 +116,6 @@ single_test_vectors = [
     ["empty array", [], b"\x90"],
     # Empty Map
     ["empty map", {}, b"\x80"],
-    # 32-bit Timestamp
-    ["32-bit timestamp", datetime.datetime(1970, 1, 1, 0, 0, 0, 0, umsgpack._utc_tzinfo),
-        b"\xd6\xff\x00\x00\x00\x00"],
-    ["32-bit timestamp", datetime.datetime(2000, 1, 1, 10, 5, 2, 0, umsgpack._utc_tzinfo),
-        b"\xd6\xff\x38\x6d\xd1\x4e"],
-    # 64-bit Timestamp
-    ["64-bit timestamp", datetime.datetime(2000, 1, 1, 10, 5, 2, 1234, umsgpack._utc_tzinfo),
-        b"\xd7\xff\x00\x4b\x51\x40\x38\x6d\xd1\x4e"],
-    ["64-bit timestamp", datetime.datetime(2200, 1, 1, 10, 5, 2, 0, umsgpack._utc_tzinfo),
-        b"\xd7\xff\x00\x00\x00\x01\xb0\x9e\xa6\xce"],
-    ["64-bit timestamp", datetime.datetime(2200, 1, 1, 10, 5, 2, 1234, umsgpack._utc_tzinfo),
-        b"\xd7\xff\x00\x4b\x51\x41\xb0\x9e\xa6\xce"],
-    # 96-bit Timestamp
-    ["96-bit timestamp", datetime.datetime(1900, 1, 1, 10, 5, 2, 0, umsgpack._utc_tzinfo),
-        b"\xc7\x0c\xff\x00\x00\x00\x00\xff\xff\xff\xff\x7c\x56\x0f\x4e"],
-    ["96-bit timestamp", datetime.datetime(1900, 1, 1, 10, 5, 2, 1234, umsgpack._utc_tzinfo),
-        b"\xc7\x0c\xff\x00\x12\xd4\x50\xff\xff\xff\xff\x7c\x56\x0f\x4e"],
-    ["96-bit timestamp", datetime.datetime(3000, 1, 1, 10, 5, 2, 0, umsgpack._utc_tzinfo),
-        b"\xc7\x0c\xff\x00\x00\x00\x00\x00\x00\x00\x07\x91\x5f\x59\xce"],
-    ["96-bit timestamp", datetime.datetime(3000, 1, 1, 10, 5, 2, 1234, umsgpack._utc_tzinfo),
-        b"\xc7\x0c\xff\x00\x12\xd4\x50\x00\x00\x00\x07\x91\x5f\x59\xce"],
 ]
 
 composite_test_vectors = [
@@ -319,18 +297,6 @@ float_precision_test_vectors = [
     ["float precision double", 2.5, b"\xcb\x40\x04\x00\x00\x00\x00\x00\x00"],
 ]
 
-naive_timestamp_test_vectors = [
-    ["32-bit timestamp (naive)", datetime.datetime(2000, 1, 1, 10, 5, 2, 0, umsgpack._utc_tzinfo),
-        b"\xd6\xff\x38\x6d\xd1\x4e",
-        datetime.datetime(2000, 1, 1, 10, 5, 2, 0, umsgpack._utc_tzinfo)],
-    ["64-bit timestamp (naive)", datetime.datetime(2200, 1, 1, 10, 5, 2, 1234, umsgpack._utc_tzinfo),
-        b"\xd7\xff\x00\x4b\x51\x41\xb0\x9e\xa6\xce",
-        datetime.datetime(2200, 1, 1, 10, 5, 2, 1234, umsgpack._utc_tzinfo)],
-    ["96-bit timestamp (naive)", datetime.datetime(3000, 1, 1, 10, 5, 2, 1234, umsgpack._utc_tzinfo),
-        b"\xc7\x0c\xff\x00\x12\xd4\x50\x00\x00\x00\x07\x91\x5f\x59\xce",
-        datetime.datetime(3000, 1, 1, 10, 5, 2, 1234, umsgpack._utc_tzinfo)],
-]
-
 CustomType = namedtuple('CustomType', ['x', 'y', 'z'])
 
 ext_handlers = {
@@ -346,21 +312,21 @@ ext_handlers_test_vectors = [
      b"\xd7\x30\x93\xc4\x03\x61\x62\x63\x7b\xc3"],
 ]
 
-override_ext_handlers = {
-    datetime.datetime:
-        lambda obj: umsgpack.Ext(0x40, obj.strftime("%Y%m%dT%H:%M:%S.%f").encode()),
-    -0x01:
-        lambda ext: ext,
-}
+# override_ext_handlers = {
+#     datetime.datetime:
+#         lambda obj: umsgpack.Ext(0x40, obj.strftime("%Y%m%dT%H:%M:%S.%f").encode()),
+#     -0x01:
+#         lambda ext: ext,
+# }
 
-override_ext_handlers_test_vectors = [
-    ["pack override",
-        datetime.datetime(2000, 1, 1, 10, 5, 2, 0, umsgpack._utc_tzinfo),
-        b'\xc7\x18@20000101T10:05:02.000000'],
-    ["unpack override",
-        umsgpack.Ext(-0x01, b"\x00\xbb\xcc\xdd\x01\x02\x03\x04\x05\x06\x07\x08"),
-        b'\xc7\x0c\xff\x00\xbb\xcc\xdd\x01\x02\x03\x04\x05\x06\x07\x08'],
-]
+# override_ext_handlers_test_vectors = [
+#     ["pack override",
+#         datetime.datetime(2000, 1, 1, 10, 5, 2, 0, umsgpack._utc_tzinfo),
+#         b'\xc7\x18@20000101T10:05:02.000000'],
+#     ["unpack override",
+#         umsgpack.Ext(-0x01, b"\x00\xbb\xcc\xdd\x01\x02\x03\x04\x05\x06\x07\x08"),
+#         b'\xc7\x0c\xff\x00\xbb\xcc\xdd\x01\x02\x03\x04\x05\x06\x07\x08'],
+# ]
 
 # These are the only global variables that should be exported by umsgpack
 exported_vars_test_vector = [
