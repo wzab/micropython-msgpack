@@ -667,17 +667,14 @@ def _unpack_map(code, fp, options):
         if isinstance(k, list):
             # Attempt to convert list into a hashable tuple
             k = _deep_list_to_tuple(k)
-        elif not isinstance(k, collections.Hashable):
-            raise UnhashableKeyException(
-                "encountered unhashable key: %s, %s" % (str(k), str(type(k))))
-        elif k in d:
-            raise DuplicateKeyException(
-                "encountered duplicate key: %s, %s" % (str(k), str(type(k))))
 
         # Unpack value
         v = _unpack(fp, options)
 
         try:
+            if k in d:
+                raise DuplicateKeyException(
+                    "encountered duplicate key: %s, %s" % (str(k), str(type(k))))
             d[k] = v
         except TypeError:
             raise UnhashableKeyException(
