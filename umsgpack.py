@@ -45,7 +45,7 @@ License: MIT
 """
 import ustruct as struct
 from ucollections import OrderedDict
-import io
+import uio as io
 
 __version__ = "2.5.1"
 "Module version string"
