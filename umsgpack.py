@@ -576,7 +576,7 @@ def _unpack_string(code, fp, options):
     data = _read_except(fp, length)
     try:
         return bytes.decode(data, 'utf-8')
-    except UnicodeDecodeError:
+    except UnicodeError:
         if options.get("allow_invalid_utf8"):
             return InvalidString(data)
         raise InvalidStringException("unpacked string is invalid utf-8")
